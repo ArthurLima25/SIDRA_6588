@@ -1,0 +1,42 @@
+name: Atualizar SIDRA 6588 (Bahia)
+
+on:
+  schedule:
+    # Todos os dias às 08:00 no horário da Bahia (11:00 UTC)
+    - cron: "0 11 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  atualizar-dados:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Executar script da Tabela 6588
+        run: python baixar_6588.py
+
+      - name: Fazer commit e push dos ficheiros atualizados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "Sem alterações nos dados hoje."
+          else
+            git commit -m "Atualiza dados SIDRA 6588 Bahia ($(date -u +'%Y-%m-%d'))"
+            git push
+          fi
